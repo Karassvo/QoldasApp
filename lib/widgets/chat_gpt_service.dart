@@ -1,12 +1,17 @@
+
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart';
-import '../consts.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatGptService {
-  final OpenAI _openAI = OpenAI.instance.build(
-    token: OPENAI_API_KEY,
-    baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 10)),
-    enableLog: true,
-  );
+  late final OpenAI _openAI;
+
+  ChatGptService() {
+    _openAI = OpenAI.instance.build(
+      token: dotenv.env['OPENAI_API_KEY'] ?? '', // Загружаем ключ из .env
+      baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 10)),
+      enableLog: true,
+    );
+  }
 
   Future<String> sendMessage(String prompt) async {
     print("Отправляю запрос в ChatGPT: $prompt");

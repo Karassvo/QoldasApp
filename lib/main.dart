@@ -1,3 +1,4 @@
+
 import 'dart:ui';
 import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +10,12 @@ DateTime get _now => DateTime.now();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return CalendarControllerProvider(
@@ -29,11 +31,10 @@ class MyApp extends StatelessWidget {
             PointerDeviceKind.touch,
           },
         ),
-        home: HomePage(),
+        home: const HomePage(),
       ),
     );
   }
 }
 
-List<CalendarEventData> _events = [
-];
+List<CalendarEventData<dynamic>> _events = [];
