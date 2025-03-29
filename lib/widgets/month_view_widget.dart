@@ -2,7 +2,7 @@ import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 
 import '../pages/event_details_page.dart';
-import '../pages/day_view_page.dart'; // Импортируем DayViewPageDemo
+import '../pages/day_view_page.dart';
 
 class MonthViewWidget extends StatelessWidget {
   final GlobalKey<MonthViewState>? state;

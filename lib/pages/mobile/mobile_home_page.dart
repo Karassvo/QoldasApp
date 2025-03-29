@@ -60,7 +60,7 @@ class _MobileHomePageState extends State<MobileHomePage> with SingleTickerProvid
                   child: CustomPaint(
                     size: Size(double.infinity, 150),
                     painter: WavePainter(
-                      color: Color(0xFFFF6F42).withOpacity(0.2),
+                      color: Color(0xFF42D3FF).withOpacity(0.2),
                       waveHeight: 20,
                       animationValue: _waveAnimation.value,
                       isReversed: true, // Перевернутая волна
@@ -76,7 +76,7 @@ class _MobileHomePageState extends State<MobileHomePage> with SingleTickerProvid
                   child: CustomPaint(
                     size: Size(double.infinity, 150),
                     painter: WavePainter(
-                      color: Color(0xFFFF6F42).withOpacity(0.2),
+                      color: Color(0xFF42D3FF).withOpacity(0.2),
                       waveHeight: 20,
                       animationValue: _waveAnimation.value,
                       isReversed: false, // Обычная волна
@@ -132,7 +132,7 @@ class _MobileHomePageState extends State<MobileHomePage> with SingleTickerProvid
           color: Color(0xFFF5F5F5), // Светлый фон кнопок
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: Color(0xFFFF6F42).withOpacity(0.5), // Оранжевая обводка
+            color: Color(0xFF42D3FF).withOpacity(0.5), // Оранжевая обводка
             width: 1,
           ),
         ),
@@ -149,7 +149,7 @@ class _MobileHomePageState extends State<MobileHomePage> with SingleTickerProvid
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: Color(0xFFFF6F42), size: 24), // Оранжевые иконки
+              Icon(icon, color: Color(0xFF42D3FF), size: 24), // Оранжевые иконки
               SizedBox(width: 12),
               Text(
                 text,
