@@ -50,19 +50,19 @@ class CreateEventPage extends StatelessWidget {
                 CalendarControllerProvider.of(context).controller.add(newEvent);
               }
 
-              print(" Создано событие: ${newEvent.title}");
+              print("Создано событие: ${newEvent.title}");
 
               String prompt =
-                  "Я только что создал событие '${newEvent.title}'. Дай мне совет или напоминание.";
-
+                  "Я только что создал событие '${newEvent.title}' с описанием '${newEvent.description}', "
+                  "которое состоится ${newEvent.date} в ${newEvent.startTime} - ${newEvent.endTime}. ";
               try {
                 String chatGptResponse =
-                    await chatGptService.sendMessage(prompt);
-                print(" Ответ от ChatGPT: $chatGptResponse");
+                await chatGptService.sendMessage(prompt);
+                print("Ответ от ChatGPT: $chatGptResponse");
 
                 _showChatGptResponse(context, chatGptResponse);
               } catch (e) {
-                print(" Ошибка ChatGPT: $e");
+                print("Ошибка ChatGPT: $e");
                 _showChatGptResponse(context, "Ошибка: ${e.toString()}");
               }
 
