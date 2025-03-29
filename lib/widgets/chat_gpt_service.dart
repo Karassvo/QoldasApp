@@ -15,21 +15,23 @@ class ChatGptService {
   Future<String> sendMessage(String prompt) async {
     print("Отправляю первый запрос в ChatGPT: $prompt");
 
-    final request = ChatCompleteText(
+    final firstRequest = ChatCompleteText(
       messages: [
         {
           "role": "system",
           "content":
-          "Проанализируй расписание и вычисли нагрузку дня строго по формуле: Нагрузка = (0.5 × Время) + (0.3 × Сложность), где:\n"
+          "Проанализируй расписание и вычисли нагрузку дня по формуле: "
+              "Нагрузка = (0.5 × Время) + (0.3 × Сложность), где:\n"
               "- Время = (длительность задачи в часах) / 16,\n"
-              "- Сложность определяется по ключевым словам в title и description:\n"
+              "- Сложность определяется по ключевым словам:\n"
               "  - 0.5 — «экзамен», «курсовая», «тест», «зачёт»\n"
               "  - 0.3 — «учёба», «кодинг», «программирование», «проект»\n"
               "  - 0.1 — «отдых», «спорт», «развлечение»\n"
-              "  - Если ключевых слов нет, оцени контекст:\n"
-              "    - 0.4-0.5 — высокая умственная нагрузка\n"
-              "    - 0.2-0.3 — физическая или социальная активность\n"
-              "    - 0.1 — простые бытовые задачи."
+              "Если ключевых слов нет, оцени контекст:\n"
+              "  - 0.4-0.5 — высокая умственная нагрузка\n"
+              "  - 0.2-0.3 — физическая или социальная активность\n"
+              "  - 0.1 — простые бытовые задачи.\n\n"
+              "Выведи полный анализ, а в конце напиши **только число нагрузки** в следующем формате: 'Итог: X.XX'"
         },
         {"role": "user", "content": prompt},
       ],
@@ -38,30 +40,23 @@ class ChatGptService {
     );
 
     try {
-      final response = await _openAI.onChatCompletion(request: request);
-      if (response != null && response.choices?.isNotEmpty == true) {
-        String firstResponse = response.choices!.first.message?.content ?? "Ответ не получен.";
+      final firstResponse = await _openAI.onChatCompletion(request: firstRequest);
+      if (firstResponse != null && firstResponse.choices?.isNotEmpty == true) {
+        String fullAnalysis = firstResponse.choices!.first.message?.content?.trim() ?? "Ошибка при получении ответа.";
 
-        print("Ответ первого запроса: $firstResponse");
+        print("Ответ первого запроса: $fullAnalysis");
 
-        // Формируем второй запрос, передавая весь ответ первого запроса
-        final secondRequest = ChatCompleteText(
-          messages: [
-            {"role": "system", "content": "Извлеки только числовое значение нагрузки из ответа пользователя. Ответ должен содержать только число, без пояснений."},
-            {"role": "user", "content": firstResponse},
-          ],
-          model: Gpt4ChatModel(),
-          maxToken: 50,
-        );
+        // Извлекаем только число из ответа
+        RegExp regExp = RegExp(r'Итог:\s*([\d.]+)'); // Находим строку вида "Итог: X.XX"
+        Match? match = regExp.firstMatch(fullAnalysis);
 
-        print("Отправляю второй запрос для числового показателя...");
-
-        final secondResponse = await _openAI.onChatCompletion(request: secondRequest);
-        if (secondResponse != null && secondResponse.choices?.isNotEmpty == true) {
-          String numericValue = secondResponse.choices!.first.message?.content?.trim() ?? "Число не найдено.";
-          return numericValue; // ✅ Теперь возвращается только число
+        if (match != null) {
+          String numericValue = match.group(1) ?? "";
+          print("Числовое значение: $numericValue");
+          return numericValue; // ✅ Возвращаем только число
         } else {
-          return "Ошибка: Не удалось получить числовой показатель.";
+          print("Не удалось извлечь число, возвращаю весь анализ.");
+          return fullAnalysis;
         }
       } else {
         return "Ошибка: Пустой ответ от ChatGPT.";

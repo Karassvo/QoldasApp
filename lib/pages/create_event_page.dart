@@ -26,7 +26,14 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
   @override
   Widget build(BuildContext context) {
-    final _eventController = CalendarControllerProvider.of(context).controller;
+    final _eventController = CalendarControllerProvider.of(context)?.controller;
+    if (_eventController == null) {
+      print("Ошибка: CalendarController не найден.");
+      return Scaffold(
+        appBar: AppBar(title: Text("Ошибка")),
+        body: Center(child: Text("Ошибка загрузки контроллера календаря")),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -63,28 +70,31 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
               print("Создано событие: ${newEvent.title}");
 
-              List<CalendarEventData> sameDateEvents = _eventController.events.where((event) {
-                return event.date == newEvent.date;
-              }).toList();
+              List<CalendarEventData> sameDateEvents = _eventController.events
+                  ?.where((event) => event.date == newEvent.date)
+                  .toList() ?? [];
 
               String chatPrompt = "Список задач на ${newEvent.date}:\n";
               for (var event in sameDateEvents) {
                 chatPrompt += "- ${event.title}: ${event.description} (с ${event.startTime} до ${event.endTime})\n";
               }
+              chatPrompt += "\nПроанализируй нагрузку и в конце напиши 'Итог: X.XX'.";
 
               _showLoadingDialog();
 
               try {
+                String fullResponse = await _chatGptService.sendMessage(chatPrompt);
+                RegExp regex = RegExp(r"\d+(\.\d+)?");
+                Match? match = regex.firstMatch(fullResponse);
+                String numericValue = match?.group(0) ?? "Ошибка при извлечении числа";
 
-                await _chatGptService.sendMessage(chatPrompt);
-                String numericRequest = "Выведи только числовое значение нагрузки без пояснений.";
-                String secondResponse = await _chatGptService.sendMessage(numericRequest);
-                print("Числовой показатель: $secondResponse");
 
+                if (!mounted) return;
                 Navigator.of(context).pop();
-                _showChatGptResponse(secondResponse);
+                _showChatGptResponse(numericValue);
               } catch (e) {
                 print("Ошибка ChatGPT: $e");
+                if (!mounted) return;
                 Navigator.of(context).pop();
                 _showChatGptResponse("Ошибка: ${e.toString()}");
               }
