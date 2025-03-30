@@ -87,14 +87,13 @@ class _CreateEventPageState extends State<CreateEventPage> {
                 Navigator.of(context).pop(); // Закрываем загрузочный диалог
 
                 if (recommendation.isNotEmpty) {
-                  _showChatGptResponse(recommendation);
+                  _showChatGptResponse(recommendation, newEvent);
                 }
               } catch (e) {
                 print("Ошибка ChatGPT: $e");
                 Navigator.of(context).pop();
-                _showChatGptResponse("Ошибка: ${e.toString()}");
+                _showChatGptResponse("Ошибка: ${e.toString()}", newEvent);
               }
-
             },
             event: widget.event,
           ),
@@ -103,7 +102,7 @@ class _CreateEventPageState extends State<CreateEventPage> {
     );
   }
 
-  void _showChatGptResponse(String response) {
+  void _showChatGptResponse(String response, CalendarEventData newEvent) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -112,8 +111,39 @@ class _CreateEventPageState extends State<CreateEventPage> {
           content: Text(response),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text("OK"),
+              onPressed: () {
+                // Закрываем диалог без изменений
+                Navigator.of(context).pop();
+              },
+              child: Text("Не сейчас"),
+            ),
+            TextButton(
+              onPressed: () {
+                // Удаляем старое событие
+                final _eventController = CalendarControllerProvider.of(context)?.controller;
+                if (_eventController != null) {
+                  _eventController.remove(newEvent); // Удаляем старое событие
+                  print("Старое событие удалено: ${newEvent.title}");
+                }
+
+                // Создаем новый ивент с той же информацией, но новой датой
+                final newEventWithNewDate = CalendarEventData(
+                  title: newEvent.title,
+                  description: newEvent.description,
+                  startTime: newEvent.startTime,
+                  endTime: newEvent.endTime,
+                  date: newEvent.date.add(Duration(days: 1)), // Например, добавляем 1 день
+                );
+
+                // Добавляем новый ивент
+                if (_eventController != null) {
+                  _eventController.add(newEventWithNewDate);
+                  print("Новый ивент добавлен с новой датой: ${newEventWithNewDate.title}");
+                }
+
+                Navigator.of(context).pop(); // Закрываем диалог
+              },
+              child: Text("Прислушаться"),
             ),
           ],
         );
