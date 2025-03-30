@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../pages/event_details_page.dart';
 import '../pages/day_view_page.dart';
+import 'day_view_widget.dart';
 
 class MonthViewWidget extends StatelessWidget {
   final GlobalKey<MonthViewState>? state;
@@ -20,12 +21,12 @@ class MonthViewWidget extends StatelessWidget {
       key: state,
       width: width,
       showWeekends: true,
-      startDay: WeekDays.friday,
+      startDay: WeekDays.monday,
       useAvailableVerticalSpace: true,
       onCellTap: (date, events) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => DayViewPageDemo(),
+            builder: (_) => DayViewWidget(),
           ),
         );
       },
@@ -40,8 +41,14 @@ class MonthViewWidget extends StatelessWidget {
         );
       },
       onEventLongTap: (event, date) {
-        SnackBar snackBar = SnackBar(content: Text("on LongTap"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DetailsPage(
+              event: event,
+              date: date,
+            ),
+          ),
+        );
       },
     );
   }
