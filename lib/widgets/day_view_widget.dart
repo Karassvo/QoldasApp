@@ -23,7 +23,9 @@ class DayViewWidget extends StatelessWidget {
       heightPerMinute: 3,
       timeLineBuilder: _timeLineBuilder,
       scrollPhysics: const BouncingScrollPhysics(),
-      eventArranger: SideEventArranger(maxWidth: 30),
+      eventArranger: SideEventArranger(
+        maxWidth: MediaQuery.of(context).size.width * 0.65,
+      ),
       hourIndicatorSettings: HourIndicatorSettings(
         color: Theme.of(context).dividerColor,
       ),
@@ -44,8 +46,37 @@ class DayViewWidget extends StatelessWidget {
         );
       },
       onEventLongTap: (events, date) {
-        SnackBar snackBar = SnackBar(content: Text("on LongTap"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DetailsPage(
+              event: events.first,
+              date: date,
+            ),
+          ),
+        );
+      },
+      eventTileBuilder: (date, events, boundary, start, end) {
+        final event = events.first;
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DetailsPage(event: event, date: date),
+              ),
+            );
+          },
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              event.title, // Показываем только заголовок
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+          ),
+        );
       },
       halfHourIndicatorSettings: HourIndicatorSettings(
         color: Theme.of(context).dividerColor,

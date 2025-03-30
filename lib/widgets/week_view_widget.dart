@@ -16,7 +16,9 @@ class WeekViewWidget extends StatelessWidget {
       width: width,
       showWeekends: true,
       showLiveTimeLineInAllDays: true,
-      eventArranger: SideEventArranger(maxWidth: 30),
+      eventArranger: SideEventArranger(
+        maxWidth: MediaQuery.of(context).size.width * 0.3,
+      ),
       timeLineWidth: 65,
       scrollPhysics: const BouncingScrollPhysics(),
       liveTimeIndicatorSettings: LiveTimeIndicatorSettings(
@@ -25,7 +27,10 @@ class WeekViewWidget extends StatelessWidget {
       ),
       onTimestampTap: (date) {
         SnackBar snackBar = SnackBar(
-          content: Text("On tap: ${date.hour} Hr : ${date.minute} Min"),
+          content: Text(
+            "On tap: ${date.hour} Hr : ${date.minute} Min",
+            style: TextStyle(fontSize: 12),
+          ),
         );
         ScaffoldMessenger.of(context).showSnackBar(snackBar);
       },
@@ -40,8 +45,37 @@ class WeekViewWidget extends StatelessWidget {
         );
       },
       onEventLongTap: (events, date) {
-        SnackBar snackBar = SnackBar(content: Text("on LongTap"));
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DetailsPage(
+              event: events.first,
+              date: date,
+            ),
+          ),
+        );
+      },
+      eventTileBuilder: (date, events, boundary, start, end) {
+        final event = events.first;
+        return GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => DetailsPage(event: event, date: date),
+              ),
+            );
+          },
+          child: Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              event.title, // Показываем только заголовок
+              style: TextStyle(fontSize: 14, color: Colors.white),
+            ),
+          ),
+        );
       },
     );
   }
