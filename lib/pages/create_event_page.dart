@@ -83,21 +83,18 @@ class _CreateEventPageState extends State<CreateEventPage> {
               _showLoadingDialog();
 
               try {
-                String fullResponse = await _chatGptService.sendMessage(chatPrompt);
-                RegExp regex = RegExp(r"\d+(\.\d+)?");
-                Match? match = regex.firstMatch(fullResponse);
-                String numericValue = match?.group(0) ?? "Ошибка при извлечении числа";
+                String recommendation = await _chatGptService.sendMessage(chatPrompt, newEvent.date);
+                Navigator.of(context).pop(); // Закрываем загрузочный диалог
 
-
-                if (!mounted) return;
-                Navigator.of(context).pop();
-                _showChatGptResponse(numericValue);
+                if (recommendation.isNotEmpty) {
+                  _showChatGptResponse(recommendation);
+                }
               } catch (e) {
                 print("Ошибка ChatGPT: $e");
-                if (!mounted) return;
                 Navigator.of(context).pop();
                 _showChatGptResponse("Ошибка: ${e.toString()}");
               }
+
             },
             event: widget.event,
           ),

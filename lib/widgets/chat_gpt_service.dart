@@ -4,25 +4,29 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ChatGptService {
   late final OpenAI _openAI;
 
+  // Глобальный список для хранения данных о нагрузке
+  static final List<Map<String, dynamic>> _history = [];
+
   ChatGptService() {
     _openAI = OpenAI.instance.build(
-      token: dotenv.env['OPENAI_API_KEY'] ?? '', // Загружаем ключ из .env
+      token: dotenv.env['OPENAI_API_KEY'] ?? '',
       baseOption: HttpSetup(receiveTimeout: const Duration(seconds: 20)),
       enableLog: true,
     );
   }
 
-  Future<String> sendMessage(String prompt) async {
-    print("Отправляю первый запрос в ChatGPT: $prompt");
+  Future<String> sendMessage(String prompt, DateTime date) async {
+    print("Отправляю запрос в ChatGPT: $prompt");
 
     final firstRequest = ChatCompleteText(
       messages: [
         {
           "role": "system",
           "content":
-          "Проанализируй расписание и вычисли нагрузку дня по формуле: "
-              "Нагрузка = (0.5 × Время) + (0.3 × Сложность), где:\n"
-              "- Время = (длительность задачи в часах) / 16,\n"
+          "Проанализируй расписание и вычисли нагрузку дня по формуле : "
+              "Нагрузка задачи= (0.5 × Время) + (0.4 × Сложность), где:\n"
+              "- Время = (длительность задачи в часах) / 14,\n"
+              "Нагрузка дня= сумма всех нагрузок задач\n"
               "- Сложность определяется по ключевым словам:\n"
               "  - 0.5 — «экзамен», «курсовая», «тест», «зачёт»\n"
               "  - 0.3 — «учёба», «кодинг», «программирование», «проект»\n"
@@ -47,17 +51,24 @@ class ChatGptService {
         print("Ответ первого запроса: $fullAnalysis");
 
         // Извлекаем только число из ответа
-        RegExp regExp = RegExp(r'Итог:\s*([\d.]+)'); // Находим строку вида "Итог: X.XX"
+        RegExp regExp = RegExp(r'Итог:\s*([\d.]+)');
         Match? match = regExp.firstMatch(fullAnalysis);
 
-        if (match != null) {
-          String numericValue = match.group(1) ?? "";
-          print("Числовое значение: $numericValue");
-          return numericValue; // ✅ Возвращаем только число
-        } else {
-          print("Не удалось извлечь число, возвращаю весь анализ.");
-          return fullAnalysis;
+        String numericValue = match?.group(1) ?? "0"; // Если число не найдено, ставим 0
+        double loadValue = double.tryParse(numericValue) ?? 0.0;
+        print("Числовое значение: $loadValue");
+
+        // Сохраняем в историю
+        _saveToHistory(loadValue);
+
+        // Если нагрузка больше 0.7, возвращаем рекомендацию
+        if (loadValue > 0.7) {
+          String suggestedDay = _findLeastLoadedDay();
+          return "Внимание! Нагрузка высокая. Рекомендуется перенести часть задач на $suggestedDay.";
         }
+
+        // Ничего не возвращаем, если нагрузка нормальная
+        return "";
       } else {
         return "Ошибка: Пустой ответ от ChatGPT.";
       }
@@ -65,5 +76,50 @@ class ChatGptService {
       print("Ошибка при запросе к ChatGPT: $e");
       return "Ошибка: ${e.toString()}";
     }
+  }
+
+  // Метод для сохранения данных в историю
+  void _saveToHistory(double value) {
+    final now = DateTime.now();
+    _history.add({
+      "date": "${now.year}-${now.month}-${now.day}",
+      "value": value,
+    });
+    print("Данные сохранены: $_history");
+  }
+
+  // Поиск дня с наименьшей нагрузкой или ближайшего дня
+  String _findLeastLoadedDay() {
+    if (_history.isEmpty) {
+      DateTime tomorrow = DateTime.now().add(Duration(days: 1));
+      return "${tomorrow.year}-${tomorrow.month}-${tomorrow.day}";
+    }
+
+    // Собираем уникальные даты
+    Set<String> uniqueDates = _history.map((e) => e["date"] as String).toSet();
+
+    if (uniqueDates.length == 1) {
+      DateTime tomorrow = DateTime.now().add(Duration(days: 1));
+      return "${tomorrow.year}-${tomorrow.month}-${tomorrow.day}";
+    }
+    Map<String, double> dailyLoad = {};
+    Map<String, int> count = {};
+
+    for (var entry in _history) {
+      String date = entry["date"];
+      double value = entry["value"];
+
+      dailyLoad[date] = (dailyLoad[date] ?? 0) + value;
+      count[date] = (count[date] ?? 0) + 1;
+    }
+    dailyLoad.forEach((key, value) {
+      dailyLoad[key] = value / count[key]!;
+    });
+    String leastLoadedDay = dailyLoad.entries.reduce((a, b) => a.value < b.value ? a : b).key;
+    return leastLoadedDay;
+  }
+
+  static List<Map<String, dynamic>> getHistory() {
+    return _history;
   }
 }
